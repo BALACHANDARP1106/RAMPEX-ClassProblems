@@ -1,0 +1,75 @@
+import java.util.*;
+
+class MovieRentingSystem {
+
+    // movie -> sorted shops
+    Map<Integer, TreeSet<int[]>> available;
+
+    // rented movies
+    TreeSet<int[]> rented;
+
+    // price lookup
+    Map<String, Integer> priceMap;
+
+    public MovieRentingSystem(int n, int[][] entries) {
+        available = new HashMap<>();
+        rented = new TreeSet<>((a, b) -> {
+            if (a[2] != b[2]) return a[2] - b[2]; // price
+            if (a[0] != b[0]) return a[0] - b[0]; // shop
+            return a[1] - b[1]; // movie
+        });
+
+        priceMap = new HashMap<>();
+
+        for (int[] e : entries) {
+            int shop = e[0], movie = e[1], price = e[2];
+
+            available.putIfAbsent(movie, new TreeSet<>(
+                (a, b) -> a[1] == b[1] ? a[0] - b[0] : a[1] - b[1]
+            ));
+
+            available.get(movie).add(new int[]{shop, price});
+            priceMap.put(shop + "#" + movie, price);
+        }
+    }
+
+    public List<Integer> search(int movie) {
+        List<Integer> res = new ArrayList<>();
+
+        if (!available.containsKey(movie)) return res;
+
+        int count = 0;
+        for (int[] a : available.get(movie)) {
+            res.add(a[0]);
+            if (++count == 5) break;
+        }
+
+        return res;
+    }
+
+    public void rent(int shop, int movie) {
+        int price = priceMap.get(shop + "#" + movie);
+
+        available.get(movie).remove(new int[]{shop, price});
+        rented.add(new int[]{shop, movie, price});
+    }
+
+    public void drop(int shop, int movie) {
+        int price = priceMap.get(shop + "#" + movie);
+
+        rented.remove(new int[]{shop, movie, price});
+        available.get(movie).add(new int[]{shop, price});
+    }
+
+    public List<List<Integer>> report() {
+        List<List<Integer>> res = new ArrayList<>();
+
+        int count = 0;
+        for (int[] r : rented) {
+            res.add(Arrays.asList(r[0], r[1]));
+            if (++count == 5) break;
+        }
+
+        return res;
+    }
+}
