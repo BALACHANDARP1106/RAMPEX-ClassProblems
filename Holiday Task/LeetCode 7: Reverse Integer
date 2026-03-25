@@ -1,0 +1,18 @@
+class Solution {
+    public int reverse(int x) {
+        long rev;
+        int lim=(int)Math.pow(2,31);
+        rev=0;
+        while(x>0 || x<0){
+        rev=rev*10+x%10;
+        x/=10;
+        }
+        if(x<0)
+        rev=-rev;
+        if(rev>=-lim && rev<=lim-1)
+        return (int)rev;
+        else
+        return 0;
+
+    }
+}
