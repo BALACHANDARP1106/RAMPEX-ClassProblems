@@ -1,0 +1,21 @@
+import java.util.Scanner;
+public class Main {
+    public static void main(String[] args) {
+       Scanner sc=new Scanner(System.in);
+       int col=sc.nextInt();
+       int t1=1;
+       int t2=col;
+       for(int k=1;k<=col*col;k++){
+            if(k==t1 || k==t2) {
+                System.out.print("* ");
+                if (k == t1) t1 += (col + 1);
+                if(k==t2) t2+= (col - 1);
+            }
+            else{
+                System.out.print("  ");
+            }
+            if(k%col==0)
+                System.out.println();
+        }
+    }
+}
