@@ -1,0 +1,485 @@
+import java.util.*;
+    private String questionText;
+    private int marks;
+    private String topic;
+
+    public Question(String questionText, int marks, String topic) {
+        this.questionText = questionText;ja
+        this.marks = marks;
+        this.topic = topic;
+    }
+
+    public String getQuestionText() { return questionText; }
+    public int getMarks()           { return marks; }
+    public String getTopic()        { return topic; }
+
+    public abstract void display(int questionNumber);
+    public abstract boolean checkAnswer(String userAnswer);
+    public abstract String getCorrectAnswer();
+}
+class MCQQuestion extends Question {
+    private List<String> options;
+    private int correctOptionIndex;
+
+    public MCQQuestion(String questionText, int marks, String topic,
+                       List<String> options, int correctOptionIndex) {
+        super(questionText, marks, topic);
+        this.options = options;
+        this.correctOptionIndex = correctOptionIndex;
+    }
+
+    @Override
+    public void display(int questionNumber) {
+        System.out.println("\nQ" + questionNumber + ". [MCQ | " + getMarks() + " mark(s)] " + getQuestionText());
+        char label = 'A';
+        for (String option : options) {
+            System.out.println("   " + label + ". " + option);
+            label++;
+        }
+        System.out.print("Your Answer (A/B/C/D): ");
+    }
+
+    @Override
+    public boolean checkAnswer(String userAnswer) {
+        if (userAnswer == null || userAnswer.trim().isEmpty()) return false;
+        int index = userAnswer.trim().toUpperCase().charAt(0) - 'A';
+        return index == correctOptionIndex;
+    }
+
+    @Override
+    public String getCorrectAnswer() {
+        return (char)('A' + correctOptionIndex) + ". " + options.get(correctOptionIndex);
+    }
+}
+class TrueFalseQuestion extends Question {
+    private boolean correctAnswer;
+
+    public TrueFalseQuestion(String questionText, int marks, String topic, boolean correctAnswer) {
+        super(questionText, marks, topic);
+        this.correctAnswer = correctAnswer;
+    }
+
+    @Override
+    public void display(int questionNumber) {
+        System.out.println("\nQ" + questionNumber + ". [True/False | " + getMarks() + " mark(s)] " + getQuestionText());
+        System.out.print("Your Answer (T/F): ");
+    }
+
+    @Override
+    public boolean checkAnswer(String userAnswer) {
+        if (userAnswer == null || userAnswer.trim().isEmpty()) return false;
+        String ans = userAnswer.trim().toUpperCase();
+        boolean userBool = ans.equals("T") || ans.equals("TRUE");
+        return userBool == correctAnswer;
+    }
+
+    @Override
+    public String getCorrectAnswer() {
+        return correctAnswer ? "True" : "False";
+    }
+}
+class ShortAnswerQuestion extends Question {
+    private String correctAnswer;
+
+    public ShortAnswerQuestion(String questionText, int marks, String topic, String correctAnswer) {
+        super(questionText, marks, topic);
+        this.correctAnswer = correctAnswer;
+    }
+
+    @Override
+    public void display(int questionNumber) {
+        System.out.println("\nQ" + questionNumber + ". [Short Answer | " + getMarks() + " mark(s)] " + getQuestionText());
+        System.out.print("Your Answer: ");
+    }
+
+    @Override
+    public boolean checkAnswer(String userAnswer) {
+        if (userAnswer == null) return false;
+        return userAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
+    }
+
+    @Override
+    public String getCorrectAnswer() {
+        return correctAnswer;
+    }
+}
+class Quiz {
+    private String quizTitle;
+    private String subject;
+    private int timeLimitSeconds;
+    private List<Question> questions;
+    private int totalMarks;
+
+    public Quiz(String quizTitle, String subject, int timeLimitSeconds) {
+        this.quizTitle = quizTitle;
+        this.subject = subject;
+        this.timeLimitSeconds = timeLimitSeconds;
+        this.questions = new ArrayList<>();
+        this.totalMarks = 0;
+    }
+
+    public void addQuestion(Question q) {
+        questions.add(q);
+        totalMarks += q.getMarks();
+    }
+
+    public String getQuizTitle()         { return quizTitle; }
+    public String getSubject()           { return subject; }
+    public int getTimeLimitSeconds()     { return timeLimitSeconds; }
+    public List<Question> getQuestions() { return questions; }
+    public int getTotalMarks()           { return totalMarks; }
+    public int getTotalQuestions()       { return questions.size(); }
+}
+class User {
+    private String username;
+    private String password;
+    private String role;
+    private int totalQuizzesTaken;
+    private int totalScore;
+
+    public User(String username, String password, String role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.totalQuizzesTaken = 0;
+        this.totalScore = 0;
+    }
+
+    public boolean authenticate(String password) {
+        return this.password.equals(password);
+    }
+
+    public void recordResult(int score) {
+        totalQuizzesTaken++;
+        totalScore += score;
+    }
+
+    public String getUsername()       { return username; }
+    public String getRole()           { return role; }
+    public int getTotalQuizzesTaken() { return totalQuizzesTaken; }
+    public int getTotalScore()        { return totalScore; }
+
+    public double getAverageScore() {
+        return totalQuizzesTaken == 0 ? 0.0 : (double) totalScore / totalQuizzesTaken;
+    }
+}
+class QuizResult {
+    private String username;
+    private String quizTitle;
+    private int score;
+    private int totalMarks;
+    private int totalQuestions;
+    private int correctCount;
+    private int wrongCount;
+    private long timeTakenSeconds;
+    private List<String> detailedReport;
+
+    public QuizResult(String username, String quizTitle, int totalMarks, int totalQuestions) {
+        this.username = username;
+        this.quizTitle = quizTitle;
+        this.totalMarks = totalMarks;
+        this.totalQuestions = totalQuestions;
+        this.score = 0;
+        this.correctCount = 0;
+        this.wrongCount = 0;
+        this.detailedReport = new ArrayList<>();
+    }
+
+    public void addAnswer(int qNo, String questionText, boolean isCorrect,
+                          int marks, String userAnswer, String correctAnswer) {
+        if (isCorrect) {
+            score += marks;
+            correctCount++;
+            detailedReport.add("Q" + qNo + " [CORRECT +" + marks + "]: " + questionText);
+        } else {
+            wrongCount++;
+            detailedReport.add("Q" + qNo + " [WRONG   +0]: " + questionText
+                    + "\n        Your Answer    : " + userAnswer
+                    + "\n        Correct Answer : " + correctAnswer);
+        }
+    }
+
+    public void setTimeTaken(long seconds) { this.timeTakenSeconds = seconds; }
+    public int getScore() { return score; }
+
+    public double getPercentage() {
+        return totalMarks == 0 ? 0 : ((double) score / totalMarks) * 100;
+    }
+
+    public String getGrade() {
+        double pct = getPercentage();
+        if (pct >= 90) return "A+";
+        if (pct >= 80) return "A";
+        if (pct >= 70) return "B";
+        if (pct >= 60) return "C";
+        if (pct >= 50) return "D";
+        return "F";
+    }
+
+    public void printResult() {
+        System.out.println("\n" + "=".repeat(55));
+        System.out.println("         QUIZ RESULT: " + quizTitle);
+        System.out.println("=".repeat(55));
+        System.out.println("  Student    : " + username);
+        System.out.println("  Score      : " + score + " / " + totalMarks);
+        System.out.println("  Correct    : " + correctCount + " / " + totalQuestions);
+        System.out.println("  Wrong      : " + wrongCount + " / " + totalQuestions);
+        System.out.printf ("  Percentage : %.2f%%\n", getPercentage());
+        System.out.println("  Time Taken : " + timeTakenSeconds + "s");
+        System.out.println("  Grade      : " + getGrade());
+        System.out.println("-".repeat(55));
+        System.out.println("  Detailed Report:");
+        for (String line : detailedReport) {
+            System.out.println("  " + line);
+        }
+        System.out.println("=".repeat(55));
+    }
+}
+class QuizEngine {
+    private Scanner scanner;
+
+    public QuizEngine(Scanner scanner) {
+        this.scanner = scanner;
+    }
+
+    public QuizResult runQuiz(User user, Quiz quiz) {
+        System.out.println("\n" + "=".repeat(55));
+        System.out.println("   STARTING: " + quiz.getQuizTitle());
+        System.out.println("   Subject  : " + quiz.getSubject());
+        System.out.println("   Questions: " + quiz.getTotalQuestions());
+        System.out.println("   Marks    : " + quiz.getTotalMarks());
+        System.out.println("   Time     : " + quiz.getTimeLimitSeconds() + "s");
+        System.out.println("=".repeat(55));
+        System.out.println("Press ENTER to begin...");
+        scanner.nextLine();
+
+        QuizResult result = new QuizResult(user.getUsername(), quiz.getQuizTitle(),
+                quiz.getTotalMarks(), quiz.getTotalQuestions());
+
+        long startTime   = System.currentTimeMillis();
+        long timeLimitMs = quiz.getTimeLimitSeconds() * 1000L;
+        List<Question> questions = quiz.getQuestions();
+
+        for (int i = 0; i < questions.size(); i++) {
+            long elapsed   = System.currentTimeMillis() - startTime;
+            long remaining = (timeLimitMs - elapsed) / 1000;
+
+            if (elapsed >= timeLimitMs) {
+                System.out.println("\n  *** TIME'S UP! Quiz ended. ***");
+                break;
+            }
+
+            System.out.println("\n  [Time Remaining: " + remaining + "s]");
+            Question q = questions.get(i);
+            q.display(i + 1);                          // Polymorphism
+
+            String userAnswer = scanner.nextLine().trim();
+            boolean isCorrect = q.checkAnswer(userAnswer); // Polymorphism
+
+            result.addAnswer(i + 1, q.getQuestionText(),
+                    isCorrect, q.getMarks(), userAnswer, q.getCorrectAnswer());
+
+            System.out.println(isCorrect
+                    ? "  => Correct!"
+                    : "  => Wrong! Correct: " + q.getCorrectAnswer());
+        }
+
+        long totalTime = (System.currentTimeMillis() - startTime) / 1000;
+        result.setTimeTaken(totalTime);
+        user.recordResult(result.getScore());
+        return result;
+    }
+}
+class QuizBank {
+    private Map<String, Quiz> quizzes;
+
+    public QuizBank() {
+        quizzes = new HashMap<>();
+        loadSampleQuizzes();
+    }
+
+    private void loadSampleQuizzes() {
+        // ── Quiz 1: Java OOP Basics (60s) ──
+        Quiz oopQuiz = new Quiz("Java OOP Basics", "Computer Science", 60);
+        oopQuiz.addQuestion(new MCQQuestion(
+            "Which OOP concept hides internal implementation details?", 2, "OOP",
+            Arrays.asList("Inheritance", "Encapsulation", "Polymorphism", "Abstraction"), 1));
+        oopQuiz.addQuestion(new TrueFalseQuestion(
+            "In Java, a class can extend multiple classes.", 1, "OOP", false));
+        oopQuiz.addQuestion(new MCQQuestion(
+            "Which keyword is used to inherit a class in Java?", 2, "OOP",
+            Arrays.asList("this", "super", "extends", "implements"), 2));
+        oopQuiz.addQuestion(new ShortAnswerQuestion(
+            "What keyword calls the parent class constructor?", 2, "OOP", "super"));
+        oopQuiz.addQuestion(new TrueFalseQuestion(
+            "Java 8+ interfaces can have default method implementations.", 1, "OOP", true));
+        quizzes.put("OOP", oopQuiz);
+
+        // ── Quiz 2: General Knowledge (90s) ──
+        Quiz gkQuiz = new Quiz("General Knowledge", "GK", 90);
+        gkQuiz.addQuestion(new MCQQuestion(
+            "Which planet is known as the Red Planet?", 1, "Science",
+            Arrays.asList("Venus", "Jupiter", "Mars", "Saturn"), 2));
+        gkQuiz.addQuestion(new TrueFalseQuestion(
+            "The capital of Australia is Sydney.", 1, "Geography", false));
+        gkQuiz.addQuestion(new ShortAnswerQuestion(
+            "How many continents are there on Earth?", 1, "Geography", "7"));
+        gkQuiz.addQuestion(new MCQQuestion(
+            "Who invented the telephone?", 2, "History",
+            Arrays.asList("Nikola Tesla", "Thomas Edison", "Alexander Graham Bell", "James Watt"), 2));
+        gkQuiz.addQuestion(new TrueFalseQuestion(
+            "The Great Wall of China is visible from space with the naked eye.", 1, "GK", false));
+        quizzes.put("GK", gkQuiz);
+    }
+
+    public Quiz getQuiz(String key)  { return quizzes.get(key); }
+    public boolean hasQuiz(String k) { return quizzes.containsKey(k); }
+
+    public void listQuizzes() {
+        System.out.println("\n  Available Quizzes:");
+        System.out.println("  " + "-".repeat(48));
+        int i = 1;
+        for (Map.Entry<String, Quiz> e : quizzes.entrySet()) {
+            Quiz q = e.getValue();
+            System.out.printf("  %d. %-5s | %-25s | %dQs | %ds%n",
+                    i++, e.getKey(), q.getQuizTitle(),
+                    q.getTotalQuestions(), q.getTimeLimitSeconds());
+        }
+        System.out.println("  " + "-".repeat(48));
+    }
+}
+class UserManager {
+    private Map<String, User> users;
+
+    public UserManager() {
+        users = new HashMap<>();
+        users.put("admin", new User("admin", "admin123", "admin"));
+        users.put("alice", new User("alice", "pass123",  "student"));
+        users.put("bob",   new User("bob",   "pass456",  "student"));
+    }
+
+    public boolean register(String username, String password) {
+        if (users.containsKey(username)) {
+            System.out.println("  Username already exists!");
+            return false;
+        }
+        users.put(username, new User(username, password, "student"));
+        System.out.println("  Registered successfully as: " + username);
+        return true;
+    }
+
+    public User login(String username, String password) {
+        User user = users.get(username);
+        return (user != null && user.authenticate(password)) ? user : null;
+    }
+
+    public void printLeaderboard() {
+        System.out.println("\n  === LEADERBOARD ===");
+        System.out.printf("  %-15s %-10s %-10s %-10s%n", "Username", "Quizzes", "Total Pts", "Average");
+        System.out.println("  " + "-".repeat(48));
+        users.values().stream()
+            .filter(u -> u.getRole().equals("student"))
+            .sorted((a, b) -> Double.compare(b.getAverageScore(), a.getAverageScore()))
+            .forEach(u -> System.out.printf("  %-15s %-10d %-10d %.2f%n",
+                u.getUsername(), u.getTotalQuizzesTaken(),
+                u.getTotalScore(), u.getAverageScore()));
+        System.out.println("  " + "=".repeat(48));
+    }
+}
+
+public class OnlineQuizSystem {
+    private static Scanner scanner     = new Scanner(System.in);
+    private static UserManager userMgr = new UserManager();
+    private static QuizBank quizBank   = new QuizBank();
+    private static QuizEngine engine   = new QuizEngine(scanner);
+
+    public static void main(String[] args) {
+
+        while (true) {
+            System.out.println("\n--- MAIN MENU ---");
+            System.out.println("  1. Login");
+            System.out.println("  2. Register");
+            System.out.println("  3. Exit");
+            System.out.print("Choose: ");
+
+            switch (scanner.nextLine().trim()) {
+                case "1": handleLogin();    break;
+                case "2": handleRegister(); break;
+                case "3":
+                    System.out.println("Goodbye!");
+                    System.exit(0);
+                default:
+                    System.out.println("  Invalid option.");
+            }
+        }1
+        
+    }
+
+    private static void handleRegister() {
+        System.out.println("\n--- REGISTER ---");
+        System.out.print("  Username: "); String u = scanner.nextLine().trim();
+        System.out.print("  Password: "); String p = scanner.nextLine().trim();
+        userMgr.register(u, p);
+    }
+
+    private static void handleLogin() {
+        System.out.println("\n--- LOGIN ---");
+        System.out.print("  Username: "); String u = scanner.nextLine().trim();
+        System.out.print("  Password: "); String p = scanner.nextLine().trim();
+
+        User user = userMgr.login(u, p);
+        if (user == null) { System.out.println("  Invalid credentials."); return; }
+        System.out.println("  Welcome, " + user.getUsername() + " [" + user.getRole() + "]!");
+
+        if (user.getRole().equals("admin")) adminMenu(user);
+        else studentMenu(user);
+    }
+
+    private static void studentMenu(User user) {
+        while (true) {
+            System.out.println("\n--- STUDENT MENU [" + user.getUsername() + "] ---");
+            System.out.println("  1. Take a Quiz");
+            System.out.println("  2. My Stats");
+            System.out.println("  3. Leaderboard");
+            System.out.println("  4. Logout");
+            System.out.print("Choose: ");
+
+            switch (scanner.nextLine().trim()) {
+                case "1":
+                    quizBank.listQuizzes();
+                    System.out.print("  Enter Quiz Code (OOP / GK): ");
+                    String code = scanner.nextLine().trim().toUpperCase();
+                    if (!quizBank.hasQuiz(code)) { System.out.println("  Not found."); break; }
+                    engine.runQuiz(user, quizBank.getQuiz(code)).printResult();
+                    break;
+                case "2":
+                    System.out.println("\n  === MY STATS ===");
+                    System.out.println("  Username     : " + user.getUsername());
+                    System.out.println("  Quizzes Taken: " + user.getTotalQuizzesTaken());
+                    System.out.println("  Total Points : " + user.getTotalScore());
+                    System.out.printf ("  Average Score: %.2f%n", user.getAverageScore());
+                    break;
+                case "3": userMgr.printLeaderboard(); break;
+                case "4": System.out.println("  Logged out."); return;
+                default:  System.out.println("  Invalid option.");
+            }
+        }
+    }
+
+    private static void adminMenu(User user) {
+        while (true) {
+            System.out.println("\n--- ADMIN MENU ---");
+            System.out.println("  1. View All Quizzes");
+            System.out.println("  2. Leaderboard");
+            System.out.println("  3. Logout");
+            System.out.print("Choose: ");
+
+            switch (scanner.nextLine().trim()) {
+                case "1": quizBank.listQuizzes();         break;
+                case "2": userMgr.printLeaderboard();     break;
+                case "3": System.out.println("  Logged out."); return;
+                default:  System.out.println("  Invalid option.");
+            }
+        }
+    }
+}
