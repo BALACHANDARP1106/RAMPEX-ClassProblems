@@ -1,0 +1,121 @@
+import java.util.Scanner;
+
+abstract class Plan {
+    private String name;
+    private int duration;
+
+    public Plan(String name, int duration) {
+        this.name = name;
+        this.duration = duration;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public abstract double calculatePrice();
+}
+
+class BasicPlan extends Plan {
+    public BasicPlan() {
+        super("Basic", 30);
+    }
+
+    @Override
+    public double calculatePrice() {
+        return 499;
+    }
+}
+
+class PremiumPlan extends Plan {
+    public PremiumPlan() {
+        super("Premium", 30);
+    }
+
+    @Override
+    public double calculatePrice() {
+        return 999 * 0.9;
+    }
+}
+
+class User {
+    private String name;
+    private Subscription subscription;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    public void subscribe(Plan plan) {
+        subscription = new Subscription(this, plan);
+        System.out.println(name + " subscribed to " + plan.getName());
+    }
+
+    public void checkSubscription() {
+        if (subscription != null && subscription.isActive()) {
+            System.out.println("Active Subscription");
+        } else {
+            System.out.println("No Active Subscription");
+        }
+    }
+}
+
+class Subscription {
+    private User user;
+    private Plan plan;
+    private long startTime;
+
+    public Subscription(User user, Plan plan) {
+        this.user = user;
+        this.plan = plan;
+        this.startTime = System.currentTimeMillis();
+    }
+
+    public boolean isActive() {
+        long currentTime = System.currentTimeMillis();
+        long days = (currentTime - startTime) / (1000 * 60 * 60 * 24);
+        return days < plan.getDuration();
+    }
+
+    public void showDetails() {
+        System.out.println("Plan: " + plan.getName());
+        System.out.println("Price: " + plan.calculatePrice());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter username: ");
+        String username = sc.nextLine();
+
+        User user = new User(username);
+
+        System.out.println("Choose Subscription Plan:");
+        System.out.println("1. Basic Plan");
+        System.out.println("2. Premium Plan");
+        System.out.print("Enter choice (1 or 2): ");
+        int choice = sc.nextInt();
+
+        Plan selectedPlan;
+
+        if (choice == 1) {
+            selectedPlan = new BasicPlan();
+        } else {
+            selectedPlan = new PremiumPlan();
+        }
+
+        user.subscribe(selectedPlan);
+        user.checkSubscription();
+
+        Subscription sub = new Subscription(user, selectedPlan);
+        sub.showDetails();
+
+        sc.close();
+    }
+}
